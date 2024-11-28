@@ -22,10 +22,11 @@ var (
 
 type (
 	songsModel interface {
-		Insert(ctx context.Context, data *Songs) (sql.Result, error)
+		Insert(ctx context.Context, data *Songs) (int64, error)
 		FindOne(ctx context.Context, id int64) (*Songs, error)
 		Update(ctx context.Context, data *Songs) error
 		Delete(ctx context.Context, id int64) error
+		FindAll(ctx context.Context, groupName, songName *string, page, pageSize int) ([]Songs, error)
 	}
 
 	defaultSongsModel struct {
@@ -40,6 +41,7 @@ type (
 		ReleaseDate time.Time      `db:"release_date"`
 		Link        sql.NullString `db:"link"`
 		Text        string         `db:"song_text"`
+
 		// CreatedAt   time.Time      `db:"created_at"`
 		// UpdatedAt   time.Time      `db:"updated_at"`
 	}
@@ -72,11 +74,27 @@ func (m *defaultSongsModel) FindOne(ctx context.Context, id int64) (*Songs, erro
 	}
 }
 
-func (m *defaultSongsModel) Insert(ctx context.Context, data *Songs) (sql.Result, error) {
-	query := fmt.Sprintf("insert into %s (%s) values ($1, $2, $3, $4,$5)", m.table, songsRowsExpectAutoSet)
-	ret, err := m.conn.ExecCtx(ctx, query, data.GroupName, data.SongName, data.ReleaseDate, data.Link, data.Text)
-	return ret, err
+func (m *defaultSongsModel) Insert(ctx context.Context, data *Songs) (int64, error) {
+	var id int64
+	query := fmt.Sprintf(
+		"INSERT INTO %s (%s) VALUES ($1, $2, $3, $4, $5) RETURNING id",
+		m.table, songsRowsExpectAutoSet,
+	)
+
+	// Use QueryRowContext for fetching the returning id
+	err := m.conn.QueryRowCtx(ctx, &id, query, data.GroupName, data.SongName, data.ReleaseDate, data.Link, data.Text)
+	if err != nil {
+		return id, err
+	}
+
+	return id, err
 }
+
+// func (m *defaultSongsModel) Insert(ctx context.Context, data *Songs) (int64, error) {
+//
+
+//     return id, nil
+// }
 
 func (m *defaultSongsModel) Update(ctx context.Context, data *Songs) error {
 	query := fmt.Sprintf("update %s set %s where id = $1", m.table, songsRowsWithPlaceHolder)
@@ -89,34 +107,40 @@ func (m *defaultSongsModel) tableName() string {
 }
 func (m *defaultSongsModel) FindAll(ctx context.Context, groupName, songName *string, page, pageSize int) ([]Songs, error) {
 	baseQuery := `
-		SELECT id, group_name, song_name, release_date, link, verses, created_at, updated_at
-		FROM songs
+		SELECT 
+    s.song_name, 
+    s.link, 
+    s.release_date, 
+    s.song_text
+FROM 
+    songs s
+LEFT JOIN 
+    verses v 
+ON 
+    v.song_id = s.id;
+
 		WHERE 1=1
 	`
 	var args []interface{}
 	var conditions []string
 
-	// Dynamically add conditions based on input
 	if groupName != nil && *groupName != "" {
-		conditions = append(conditions, "group_name ILIKE $"+fmt.Sprint(len(args)+1))
+		conditions = append(conditions, "s.group_name ILIKE $"+fmt.Sprint(len(args)+1))
 		args = append(args, "%"+*groupName+"%")
 	}
 
 	if songName != nil && *songName != "" {
-		conditions = append(conditions, "song_name ILIKE $"+fmt.Sprint(len(args)+1))
+		conditions = append(conditions, "s.song_name ILIKE $"+fmt.Sprint(len(args)+1))
 		args = append(args, "%"+*songName+"%")
 	}
 
-	// Combine conditions into the query
 	if len(conditions) > 0 {
 		baseQuery += " AND " + strings.Join(conditions, " AND ")
 	}
 
-	// Add ordering, pagination
-	baseQuery += " ORDER BY created_at DESC LIMIT $" + fmt.Sprint(len(args)+1) + " OFFSET $" + fmt.Sprint(len(args)+2)
+	baseQuery += " ORDER BY s.created_at DESC LIMIT $" + fmt.Sprint(len(args)+1) + " OFFSET $" + fmt.Sprint(len(args)+2)
 	args = append(args, pageSize, (page-1)*pageSize)
 
-	// Execute query
 	var songs []Songs
 	err := m.conn.QueryRowsCtx(ctx, &songs, baseQuery, args...)
 	if err != nil {
