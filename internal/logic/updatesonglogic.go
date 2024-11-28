@@ -2,9 +2,13 @@ package logic
 
 import (
 	"context"
+	"database/sql"
+	"fmt"
+	"time"
 
 	"api/internal/svc"
 	"api/internal/types"
+	"api/models/song"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -24,7 +28,33 @@ func NewUpdateSongLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Update
 }
 
 func (l *UpdateSongLogic) UpdateSong(req *types.Song) (resp *types.SongActionResponse, err error) {
-	// todo: add your logic here and delete this line
+	parsedDate, err := time.Parse("2006-01-02", req.ReleaseDate)
+	if err != nil {
+		logx.WithContext(l.ctx).Errorf("Error parsing release date: %v", err)
+		return nil, fmt.Errorf("invalid release date format")
+	}
 
-	return
+	song := &song.SongsUpdate{
+		GroupName:   req.Group,
+		SongName:    req.Song,
+		ReleaseDate: parsedDate,
+		Text:        req.Text,
+		Link: sql.NullString{
+			String: req.Link,
+			Valid:  req.Link != "",
+		},
+	}
+
+	logx.WithContext(l.ctx).Infof("Updating song with group %s and song name %s", req.Group, req.Song)
+
+	err = l.svcCtx.SongModel.Update(l.ctx, song)
+	if err != nil {
+		logx.WithContext(l.ctx).Errorf("Error updating song in database: %v", err)
+		return nil, fmt.Errorf("failed to update song: %v", err)
+	}
+
+	logx.WithContext(l.ctx).Infof("Successfully updated song: %s", req.Song)
+	return &types.SongActionResponse{
+		Message: fmt.Sprintf("Song '%s' updated successfully", req.Song),
+	}, nil
 }

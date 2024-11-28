@@ -1,5 +1,3 @@
-
-
 package verses
 
 import (
@@ -35,10 +33,10 @@ type (
 	}
 
 	Verses struct {
-		Id          int64         `db:"id"`
-		SongId      int `db:"song_id"`
-		VerseNumber int `db:"verse_number"`
-		Text        string        `db:"text"`
+		Id          int64  `db:"id"`
+		SongId      int    `db:"song_id"`
+		VerseNumber int    `db:"verse_number"`
+		Text        string `db:"text"`
 	}
 )
 

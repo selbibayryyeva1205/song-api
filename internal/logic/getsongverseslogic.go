@@ -24,7 +24,20 @@ func NewGetSongVersesLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Get
 }
 
 func (l *GetSongVersesLogic) GetSongVerses(req *types.SongVersesRequest) (resp *types.SongVersesResponse, err error) {
-	// todo: add your logic here and delete this line
+	logx.WithContext(l.ctx).Infof("Fetching song verses for SongID: %d, VerseNumber: %d", req.Song_id, req.VerseNumber)
+	song, err := l.svcCtx.SongModel.FindOne(l.ctx, req.Song_id, req.VerseNumber)
+	if err != nil {
+		logx.WithContext(l.ctx).Errorf("Error fetching song verses for SongID: %d, VerseNumber: %d - %v", req.Song_id, req.VerseNumber, err)
+		return nil, err
+	}
+	logx.WithContext(l.ctx).Debugf("Found song: %+v", song)
+	resp = &types.SongVersesResponse{
+		Group: song.GroupName,
+		Song:  song.SongName,
+		Link:  song.Link.String,
+		Text:  song.Text,
+	}
+	logx.WithContext(l.ctx).Debugf("Song verses response: %+v", resp)
 
-	return
+	return resp, nil
 }

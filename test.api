@@ -1,4 +1,12 @@
+
 syntax = "v1"
+info(
+    title: "Music Library API"
+    version: "1.0"
+)
+
+host("localhost:8080")
+
 
 type (
 	// Запрос для добавления песни

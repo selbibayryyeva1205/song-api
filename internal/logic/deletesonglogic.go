@@ -23,8 +23,13 @@ func NewDeleteSongLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Delete
 	}
 }
 
-func (l *DeleteSongLogic) DeleteSong() (resp *types.SongActionResponse, err error) {
-	// todo: add your logic here and delete this line
+func (l *DeleteSongLogic) DeleteSong(song_id int64) (resp *types.SongActionResponse, err error) {
+	logx.WithContext(l.ctx).Infof("Received DeleteSong request")
+	err = l.svcCtx.SongModel.Delete(l.ctx, song_id)
+	if err != nil {
+		logx.WithContext(l.ctx).Errorf("Error deleting song from database: %v", err)
+		return nil, err
+	}
 
 	return
 }
