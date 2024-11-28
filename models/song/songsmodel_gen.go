@@ -26,7 +26,7 @@ type (
 		FindOne(ctx context.Context, id int64) (*Songs, error)
 		Update(ctx context.Context, data *Songs) error
 		Delete(ctx context.Context, id int64) error
-		FindAll(ctx context.Context, groupName, songName *string, page, pageSize int) ([]Songs, error)
+		FindAll(ctx context.Context, groupName, songName *string, page, pageSize int) (song *SongsResult,err error)
 	}
 
 	defaultSongsModel struct {
@@ -41,6 +41,14 @@ type (
 		ReleaseDate time.Time      `db:"release_date"`
 		Link        sql.NullString `db:"link"`
 		Text        string         `db:"song_text"`
+
+		// CreatedAt   time.Time      `db:"created_at"`
+		// UpdatedAt   time.Time      `db:"updated_at"`
+	}
+
+	SongsResult struct {
+		Songs *[]Songs `json:"songs"`
+		Total int     `json:"total"`
 
 		// CreatedAt   time.Time      `db:"created_at"`
 		// UpdatedAt   time.Time      `db:"updated_at"`
@@ -105,47 +113,106 @@ func (m *defaultSongsModel) Update(ctx context.Context, data *Songs) error {
 func (m *defaultSongsModel) tableName() string {
 	return m.table
 }
-func (m *defaultSongsModel) FindAll(ctx context.Context, groupName, songName *string, page, pageSize int) ([]Songs, error) {
-	baseQuery := `
-		SELECT 
-    s.song_name, 
-    s.link, 
-    s.release_date, 
-    s.song_text
-FROM 
-    songs s
-LEFT JOIN 
-    verses v 
-ON 
-    v.song_id = s.id;
 
-		WHERE 1=1
+// func (m *defaultSongsModel) FindAll(ctx context.Context, groupName, songName *string, page, pageSize int) ([]Songs, error) {
+// 	baseQuery := `
+// 		SELECT s.id,
+// 		       s.song_name,
+// 		       s.link,
+// 		       s.release_date,
+// 		       s.song_text
+// 		FROM songs s
+// 	`
+
+// 	var args []interface{}
+// 	var conditions []string
+
+// 	// Add conditions for groupName
+// 	if groupName != nil && *groupName != "" {
+// 		conditions = append(conditions, "s.group_name ILIKE $"+fmt.Sprint(len(args)+1))
+// 		args = append(args, "%"+*groupName+"%")
+// 	}
+
+// 	// Add conditions for songName
+// 	if songName != nil && *songName != "" {
+// 		conditions = append(conditions, "s.song_name ILIKE $"+fmt.Sprint(len(args)+1))
+// 		args = append(args, "%"+*songName+"%")
+// 	}
+
+// 	// Append conditions to the query
+// 	if len(conditions) > 0 {
+// 		baseQuery += " WHERE " + strings.Join(conditions, " AND ")
+// 	}
+
+// 	// Add ordering and pagination
+// 	baseQuery += " ORDER BY s.created_at DESC LIMIT $" + fmt.Sprint(len(args)+1) + " OFFSET $" + fmt.Sprint(len(args)+2)
+// 	args = append(args, pageSize, (page-1)*pageSize)
+
+// 	// Execute the query
+// 	var songs []Songs
+// 	err := m.conn.QueryRowsCtx(ctx, &songs, baseQuery, args...)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+//		return songs, nil
+//	}
+func (m *defaultSongsModel) FindAll(ctx context.Context, groupName, songName *string, page, pageSize int) (song *SongsResult,err error) {
+	// Base query for retrieving rows
+	baseQuery := `
+		SELECT s.id,
+		       s.song_name, 
+		       s.link, 
+		       s.release_date, 
+		       s.song_text
+		FROM songs s
 	`
+
+	// Base query for count
+	countQuery := `
+		SELECT COUNT(*)
+		FROM songs s
+	`
+
 	var args []interface{}
 	var conditions []string
 
+	// Add conditions for groupName
 	if groupName != nil && *groupName != "" {
 		conditions = append(conditions, "s.group_name ILIKE $"+fmt.Sprint(len(args)+1))
 		args = append(args, "%"+*groupName+"%")
 	}
 
+	// Add conditions for songName
 	if songName != nil && *songName != "" {
 		conditions = append(conditions, "s.song_name ILIKE $"+fmt.Sprint(len(args)+1))
 		args = append(args, "%"+*songName+"%")
 	}
 
+	// Append conditions to both queries
 	if len(conditions) > 0 {
-		baseQuery += " AND " + strings.Join(conditions, " AND ")
+		conditionString := " WHERE " + strings.Join(conditions, " AND ")
+		baseQuery += conditionString
+		countQuery += conditionString
 	}
 
+	// Add ordering and pagination to the main query
 	baseQuery += " ORDER BY s.created_at DESC LIMIT $" + fmt.Sprint(len(args)+1) + " OFFSET $" + fmt.Sprint(len(args)+2)
 	args = append(args, pageSize, (page-1)*pageSize)
 
-	var songs []Songs
-	err := m.conn.QueryRowsCtx(ctx, &songs, baseQuery, args...)
+	// Execute the count query
+	var totalCount int
+	err = m.conn.QueryRowCtx(ctx, &totalCount, countQuery, args[:len(args)-2]...)
 	if err != nil {
 		return nil, err
 	}
 
-	return songs, nil
+	// Execute the main query
+	var songs []Songs
+	err = m.conn.QueryRowsCtx(ctx, &songs, baseQuery, args...)
+	if err != nil {
+		return nil, err
+	}
+song.Songs=&songs
+	return song, nil
 }

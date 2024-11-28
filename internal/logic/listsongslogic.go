@@ -25,6 +25,7 @@ func NewListSongsLogic(ctx context.Context, svcCtx *svc.ServiceContext) *ListSon
 
 func (l *ListSongsLogic) ListSongs(req *types.SongFilterRequest) (resp *types.SongListResponse, err error) {
 	// todo: add your logic here and delete this line
+	//songs,_:=l.svcCtx.SongModel.FindAll(l.ctx,&req.Group,&req.Song,int(req.Limit),int(req.Page))
 
 	return
 }

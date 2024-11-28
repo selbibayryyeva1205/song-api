@@ -2,6 +2,7 @@ package logic
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"log"
 	"strings"
@@ -40,6 +41,10 @@ func (l *AddSongLogic) AddSong(req *types.AddSongRequest) (resp *types.SongActio
 		SongName:    req.Group,
 		ReleaseDate: parsedDate,
 		Text:        text,
+		Link: sql.NullString{
+			String: "s,m.a,sm.,asmd.,amsf.,amsf",
+			Valid: true,
+		},
 	}
 
 	verse := strings.Split(text, "\n\n")
