@@ -38,6 +38,7 @@ type (
 	}
 
 	Songs struct {
+		Id          int64          `db:"id"`
 		GroupName   string         `db:"group_name"`
 		SongName    string         `db:"song_name"`
 		ReleaseDate time.Time      `db:"release_date"`

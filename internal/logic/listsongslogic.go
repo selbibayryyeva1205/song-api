@@ -38,6 +38,7 @@ func (l *ListSongsLogic) ListSongs(req *types.SongFilterRequest) (*types.SongLis
 	for _, v := range songs.Songs {
 		fmt.Println("GROUP", v.GroupName)
 		song := &types.Song{
+			Id: v.Id,
 
 			Song:        v.SongName,
 			Group:       v.GroupName,
