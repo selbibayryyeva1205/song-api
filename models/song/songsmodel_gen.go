@@ -24,7 +24,9 @@ var (
 type (
 	songsModel interface {
 		Insert(ctx context.Context, data *Songs) (int64, error)
-		FindOne(ctx context.Context, id int64, verseId int) (*Songs, error)
+		FindOne(ctx context.Context, id int64, verseId int) (resp *GetOneSongResult, err error)
+		
+		
 		Update(ctx context.Context, data *SongsUpdate) error
 		Delete(ctx context.Context, id int64) error
 		FindAll(ctx context.Context, groupName, songName *string, page, pageSize int) (song *SongsResult, err error)
@@ -44,6 +46,7 @@ type (
 	}
 
 	SongsUpdate struct {
+		Id          int64          `db:"id"`
 		GroupName   string         `db:"group_name"`
 		SongName    string         `db:"song_name"`
 		ReleaseDate time.Time      `db:"release_date"`
@@ -57,6 +60,7 @@ type (
 	}
 
 	GetOneSongResult struct {
+		Id          int64          `db:"id"`
 		GroupName   string         `db:"group_name"`
 		SongName    string         `db:"song_name"`
 		ReleaseDate time.Time      `db:"release_date"`
@@ -99,9 +103,9 @@ func (m *defaultSongsModel) Insert(ctx context.Context, data *Songs) (int64, err
 }
 
 func (m *defaultSongsModel) Update(ctx context.Context, data *SongsUpdate) error {
-	query := fmt.Sprintf("update %s set %s where id = $1", m.table, songsRowsWithPlaceHolder)
+	query := fmt.Sprintf("update %s set group_name = $1,song_name=$2 ,release_date = $3, link = $4, song_text = $5 where id = $6", m.table)
 	logx.WithContext(ctx).Infof("Executing update query: %s with data: %+v", query, data)
-	_, err := m.conn.ExecCtx(ctx, query, data.GroupName, data.SongName, data.ReleaseDate, data.Link)
+	_, err := m.conn.ExecCtx(ctx, query, data.GroupName, data.SongName, data.ReleaseDate, data.Link, data.Text, data.Id)
 	if err != nil {
 		logx.WithContext(ctx).Errorf("Error executing update query: %v", err)
 	}
@@ -115,6 +119,7 @@ func (m *defaultSongsModel) tableName() string {
 func (m *defaultSongsModel) FindAll(ctx context.Context, groupName, songName *string, page, pageSize int) (*SongsResult, error) {
 	baseQuery := `
 		SELECT s.id,
+			s.group_name,
 		       s.song_name, 
 		       s.link, 
 		       s.release_date, 
@@ -147,7 +152,7 @@ func (m *defaultSongsModel) FindAll(ctx context.Context, groupName, songName *st
 
 	baseQuery += " ORDER BY s.created_at DESC LIMIT $" + fmt.Sprint(len(args)+1) + " OFFSET $" + fmt.Sprint(len(args)+2)
 	args = append(args, pageSize, (page-1)*pageSize)
-
+	fmt.Println("BASE QUERY", baseQuery)
 	var totalCount int
 	logx.WithContext(ctx).Infof("Executing count query: %s", countQuery)
 	err := m.conn.QueryRowCtx(ctx, &totalCount, countQuery, args[:len(args)-2]...)
@@ -172,12 +177,14 @@ func (m *defaultSongsModel) FindAll(ctx context.Context, groupName, songName *st
 	return song, nil
 }
 
-func (m *defaultSongsModel) FindOne(ctx context.Context, id int64, verseId int) (*Songs, error) {
-	query := `SELECT 
-    s.song_name, 
+func (m *defaultSongsModel) FindOne(ctx context.Context, id int64, verseId int) (resp *GetOneSongResult, err error) {
+	query := `SELECT
+	s.id,
+	s.group_name, 
+    s.song_name,
+	s.release_date,  
     s.link, 
-    s.release_date, 
-    v."text"
+    v."song_text"
 FROM 
     songs s
 LEFT JOIN 
@@ -185,13 +192,15 @@ LEFT JOIN
 ON 
     v.song_id = s.id where v.song_id= $1 and v.verse_number =$2`
 
-	var resp Songs
+	var resp2 GetOneSongResult
 	logx.WithContext(ctx).Infof("Executing FindOne query: %s with id: %d, verseId: %d", query, id, verseId)
-	err := m.conn.QueryRowCtx(ctx, &resp, query, id, verseId)
+	err = m.conn.QueryRowCtx(ctx, &resp2, query, id, verseId)
+	fmt.Println("REEESP", &resp2)
+	resp = &resp2
 	switch err {
 	case nil:
 		logx.WithContext(ctx).Debugf("Found song: %+v", resp)
-		return &resp, nil
+		return resp, nil
 	case sqlc.ErrNotFound:
 		logx.WithContext(ctx).Errorf("Song not found with id: %d and verseId: %d", id, verseId)
 		return nil, ErrNotFound

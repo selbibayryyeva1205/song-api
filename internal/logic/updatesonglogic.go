@@ -27,14 +27,16 @@ func NewUpdateSongLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Update
 	}
 }
 
-func (l *UpdateSongLogic) UpdateSong(req *types.Song) (resp *types.SongActionResponse, err error) {
-	parsedDate, err := time.Parse("2006-01-02", req.ReleaseDate)
+func (l *UpdateSongLogic) UpdateSong(req *types.SongUpdate, id int64) (resp *types.SongActionResponse, err error) {
+	parsedDate, err := time.Parse("01-02-2006", req.ReleaseDate)
 	if err != nil {
 		logx.WithContext(l.ctx).Errorf("Error parsing release date: %v", err)
 		return nil, fmt.Errorf("invalid release date format")
 	}
 
 	song := &song.SongsUpdate{
+		Id: id,
+
 		GroupName:   req.Group,
 		SongName:    req.Song,
 		ReleaseDate: parsedDate,

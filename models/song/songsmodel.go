@@ -1,6 +1,8 @@
 package song
 
-import "github.com/zeromicro/go-zero/core/stores/sqlx"
+import (
+	"github.com/zeromicro/go-zero/core/stores/sqlx"
+)
 
 var _ SongsModel = (*customSongsModel)(nil)
 
@@ -18,6 +20,7 @@ type (
 
 // NewSongsModel returns a model for the database table.
 func NewSongsModel(conn sqlx.SqlConn) SongsModel {
+
 	return &customSongsModel{
 		defaultSongsModel: newSongsModel(conn),
 	}

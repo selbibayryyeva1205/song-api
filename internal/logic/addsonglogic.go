@@ -37,6 +37,7 @@ func (l *AddSongLogic) AddSong(req *types.AddSongRequest) (resp *types.SongActio
 	var text string
 	var song2 *song.Songs
 	var parsedDate time.Time
+	var link string
 
 	parsedDate, err = time.Parse("2006-01-02", "2024-01-01")
 	if err != nil {
@@ -46,9 +47,11 @@ func (l *AddSongLogic) AddSong(req *types.AddSongRequest) (resp *types.SongActio
 	apiData, err := getSongInfo(req.Group, req.Song, l.svcCtx.Config.OpenAPI)
 	if err != nil || apiData == nil {
 		text = "The morning sun begins to rise\nA golden glow lights up the skies\nBut in the distance, a storm brews near\nAnd whispers of danger, I can hear\n\nThe wind it howls through the trees\nCarrying secrets, across the seas\nI try to run, but it follows me\nA force unseen, that's always free\n\nNight falls, and the world grows still\nThe wind it whispers, against my will\nI listen close, but can't make a sound\nThe whispers are lost, without a ground"
+		link = "example.com"
 	} else {
+		link = apiData.Link
 		text = apiData.Text
-		parsedDate := time.Parse("2006-01-02", apiData.ReleaseDate)
+		parsedDate, _ = time.Parse("2006-01-02", apiData.ReleaseDate)
 		if err != nil {
 			return nil, fmt.Errorf("invalid release date format from API")
 		}
@@ -60,8 +63,8 @@ func (l *AddSongLogic) AddSong(req *types.AddSongRequest) (resp *types.SongActio
 		ReleaseDate: parsedDate,
 		Text:        text,
 		Link: sql.NullString{
-			String: apiData.Link,
-			Valid:  apiData.Link != "",
+			String: link,
+			Valid:  link != "",
 		},
 	}
 	song2 = song

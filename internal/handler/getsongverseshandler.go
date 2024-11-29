@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"api/internal/logic"
 	"api/internal/svc"
@@ -15,10 +16,16 @@ import (
 func GetSongVersesHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		queryParams := r.URL.Query()
-		songIDStr := queryParams.Get("song_id")
-		verseNumberStr := queryParams.Get("verse_number")
-
+		// queryParams := r.URL.Query()
+		// songIDStr := queryParams.Get("song_id")
+		// verseNumberStr := queryParams.Get("verse_number")
+		pathParts := strings.Split(r.URL.Path, "/")
+		if len(pathParts) < 5 || pathParts[2] == "" {
+			http.Error(w, "Song ID is required", http.StatusBadRequest)
+			return
+		}
+		songIDStr := pathParts[3]
+		verseNumberStr := pathParts[4]
 		songID, err := strconv.Atoi(songIDStr)
 		if err != nil {
 			httpx.ErrorCtx(r.Context(), w, fmt.Errorf("invalid song_id"))
@@ -38,11 +45,11 @@ func GetSongVersesHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 			Song_id:     int64(songID),
 			VerseNumber: verseNumber,
 		}
-		if err := httpx.Parse(r, &req); err != nil {
-			fmt.Println("Error parsing request:", err)
-			httpx.ErrorCtx(r.Context(), w, err)
-			return
-		}
+		// if err := httpx.Parse(r, &req); err != nil {
+		// 	fmt.Println("Error parsing request:", err)
+		// 	httpx.ErrorCtx(r.Context(), w, err)
+		// 	return
+		// }
 
 		// Proceed with logic handling
 		l := logic.NewGetSongVersesLogic(r.Context(), svcCtx)

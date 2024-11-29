@@ -19,24 +19,43 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			},
 			{
 				Method:  http.MethodGet,
-				Path:    "/songs/:id/verses",
+				Path:    "/songs/verse/:id/:verse_id",
 				Handler: GetSongVersesHandler(serverCtx),
 			},
 			{
 				Method:  http.MethodPost,
-				Path:    "/songs",
+				Path:    "/songs/create",
 				Handler: AddSongHandler(serverCtx),
 			},
 			{
 				Method:  http.MethodPut,
-				Path:    "/songs/:id",
+				Path:    "/songs/update/:id",
 				Handler: UpdateSongHandler(serverCtx),
 			},
 			{
 				Method:  http.MethodDelete,
-				Path:    "/songs/:id",
+				Path:    "/songs/delete/:id",
 				Handler: DeleteSongHandler(serverCtx),
 			},
 		},
 	)
+}
+func CorsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Allow all origins
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		
+		// Allow specific methods
+		w.Header().Set("Access-Control-Allow-Methods", "*")
+		// Allow specific headers
+		w.Header().Set("Access-Control-Allow-Headers", "*")
+
+		// Handle preflight requests
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }

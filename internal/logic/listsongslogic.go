@@ -2,6 +2,7 @@ package logic
 
 import (
 	"context"
+	"fmt"
 
 	"api/internal/svc"
 	"api/internal/types"
@@ -25,7 +26,7 @@ func NewListSongsLogic(ctx context.Context, svcCtx *svc.ServiceContext) *ListSon
 
 func (l *ListSongsLogic) ListSongs(req *types.SongFilterRequest) (*types.SongListResponse, error) {
 	logx.WithContext(l.ctx).Infof("Received ListSongs request: %+v", req)
-	
+
 	songs, err := l.svcCtx.SongModel.FindAll(l.ctx, &req.Group, &req.Song, int(req.Page), int(req.Limit))
 	if err != nil {
 		logx.WithContext(l.ctx).Errorf("Error fetching songs from database: %v", err)
@@ -35,7 +36,9 @@ func (l *ListSongsLogic) ListSongs(req *types.SongFilterRequest) (*types.SongLis
 
 	var songArray []types.Song
 	for _, v := range songs.Songs {
+		fmt.Println("GROUP", v.GroupName)
 		song := &types.Song{
+
 			Song:        v.SongName,
 			Group:       v.GroupName,
 			ReleaseDate: v.ReleaseDate.String(),

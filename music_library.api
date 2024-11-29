@@ -1,93 +1,97 @@
 syntax = "v1"
 
 type (
-	// Запрос для добавления песни
-	AddSongRequest {
-		Group string `json:"group"` // Имя группы
-		Song  string `json:"song"`  // Название песни
-	}
+    AddSongRequest {
+        Group string `json:"group"`
+        Song  string `json:"song"`
+    }
 
-	// Ответ на действия с песнями
-	SongActionResponse {
-		Message string `json:"message"` // Результат операции
-	}
+    SongActionResponse {
+        Message string `json:"message"`
+    }
 
-	// Запрос для фильтрации и пагинации списка песен
-	SongFilterRequest {
-		Group       string `form:"group"`        // Фильтрация по имени группы
-		Song        string `form:"song"`         // Фильтрация по названию песни
-		Page        int64  `form:"page"`         // Номер страницы
-		Limit       int64  `form:"limit"`        // Размер страницы
-		ReleaseDate string `form:"release_date"` //
-	}
+    SongFilterRequest {
+        Group string `form:"group"`
+        Song  string `form:"song"`
+        Page  int64  `form:"page"`
+        Limit int64  `form:"limit"`
+    }
 
-	// Ответ со списком песен
-	SongListResponse {
-		Songs []Song `json:"songs"` // Список песен
-		Total int64  `json:"total"` // Общее количество записей
-	}
+    SongListResponse {
+        Songs []Song `json:"songs"`
+        Total int64   `json:"total"`
+    }
 
-	// Текст куплетов песни с пагинацией
-	SongVersesRequest {
-		Song_id     int64 `form:"song_id"` // ID песни
-		VerseNumber int   `json:"verse_number"`
-	}
+    SongVersesRequest {
+        SongId      int64 `form:"song_id"`
+        VerseNumber int   `form:"verse_number"`
+    }
 
-	// Ответ с куплетами песни
-	SongVersesResponse {
-		Verses []SongVerse `json:"verses"` // Куплеты
-	}
+    SongDeleteRequest {
+        SongId int64 `form:"song_id"`
+    }
 
-	// Модель песни
-	Song {
-		Id          int64  `json:"id"`          // Уникальный идентификатор
-		Group       string `json:"group"`       // Имя группы
-		Song        string `json:"song"`        // Название песни
-		ReleaseDate string `json:"releaseDate"` // Дата релиза
-		Link        string `json:"link"`        // Ссылка на источник
-		Text        string `json:"text"`        // Ссылка на источник
-	}
+    SongVersesResponse {
+        Id          int64  `json:"id"`
+        Group       string `json:"group"`
+        Song        string `json:"song"`
+        ReleaseDate string `json:"releaseDate"`
+        Link        string `json:"link"`
+        Text        string `json:"text"`
+    }
 
-	// Модель куплета песни
-	SongVerse {
-		Verse_number int64  `json:"verse_number"` // Номер куплета
-		Verse_text   string `json:"verse_text"`   // Текст куплета
-	}
+    Song {
+        Id          int64  `json:"id"`
+        Group       string `json:"group"`
+        Song        string `json:"song"`
+        ReleaseDate string `json:"releaseDate"`
+        Link        string `json:"link"`
+        Text        string `json:"text"`
+    }
+
+    SongUpdate {
+        Id          int64  `json:"id"`
+        Group       string `json:"group"`
+        Song        string `json:"song"`
+        ReleaseDate string `json:"releaseDate"`
+        Link        string `json:"link"`
+        Text        string `json:"text"`
+    }
 )
 
 service musicLibrary-api {
-	@doc(
-		summary: Получить список песен
-		description: Возвращает список песен с возможностью фильтрации по имени группы и названию песни. Поддерживается пагинация.
-	)
-	@handler ListSongsHandler
-	get /songs(SongFilterRequest) returns (SongListResponse)
-	
-	@doc(
-		summary: Получить текст куплетов песни
-		description: Возвращает текст куплетов песни с пагинацией.
-	)
-	@handler GetSongVersesHandler
-	get /songs/:id/verses(SongVersesRequest) returns (SongVersesResponse)
-	
-	@doc(
-		summary: Добавить новую песню
-		description: Добавляет новую песню с указанием имени группы и названия песни. Выполняется запрос к внешнему API для получения дополнительной информации.
-	)
-	@handler AddSongHandler
-	post /songs(AddSongRequest) returns (SongActionResponse)
-	
-	@doc(
-		summary: Изменить данные песни
-		description: Обновляет информацию о песне по её идентификатору.
-	)
-	@handler UpdateSongHandler
-	put /songs/:id(Song) returns (SongActionResponse)
-	
-	@doc(
-		summary: Удалить песню
-		description: Удаляет песню из библиотеки по её идентификатору.
-	)
-	@handler DeleteSongHandler
-	delete /songs/:id returns (SongActionResponse)
+    @doc(
+        summary: "Get a list of songs"
+        description: Returns a list of songs with optional filtering by group name and song title. Supports pagination.
+    )
+    @handler ListSongsHandler
+    get /songs/get(SongFilterRequest) returns (SongListResponse)
+
+    @doc(
+        summary: Get song verses text
+        description: Returns the text of song verses with pagination.
+    )
+    @handler GetSongVersesHandler
+    get /songs/verse/:id/:verse_id returns (SongVersesResponse)
+
+    @doc(
+        summary: Add a new song
+        description: Adds a new song with the specified group name and song title. Queries an external API for additional information.
+    )
+    @handler AddSongHandler
+    post /songs/create(AddSongRequest) returns (SongActionResponse)
+
+    @doc(
+        summary: Update song data
+        description: Updates the information of a song by its ID.
+    )
+    @handler UpdateSongHandler
+    put /songs/update/:id(SongUpdate) returns (SongActionResponse)
+
+    @doc(
+        summary: Delete a song
+        description: Deletes a song from the library by its ID.
+    )
+    @handler DeleteSongHandler
+    delete /songs/delete/:id returns (SongActionResponse)
 }

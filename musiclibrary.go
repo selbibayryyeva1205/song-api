@@ -31,11 +31,16 @@ func main() {
 	// Create the REST server
 	server := rest.MustNewServer(rest.RestConf{
 		Port: cfg.Port,
-	})
+		Host: "127.0.0.1",
+	}, rest.WithCors("*"))
 
-	// Register API handlers
+	
+
+	// RegiHster API handlers
 	handler.RegisterHandlers(server, ctx)
-
+	//server.Use(handler.CorsMiddleware(http.HandlerFu))
+	//handle
+	server.Use(rest.ToMiddleware(handler.CorsMiddleware))
 	// Start the server
 	log.Printf("Server started on port %s", cfg.Port)
 	server.Start()

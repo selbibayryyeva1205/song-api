@@ -36,7 +36,7 @@ type (
 		Id          int64  `db:"id"`
 		SongId      int    `db:"song_id"`
 		VerseNumber int    `db:"verse_number"`
-		Text        string `db:"text"`
+		Text        string `db:"song_text"`
 	}
 )
 

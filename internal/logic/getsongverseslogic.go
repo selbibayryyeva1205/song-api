@@ -32,10 +32,12 @@ func (l *GetSongVersesLogic) GetSongVerses(req *types.SongVersesRequest) (resp *
 	}
 	logx.WithContext(l.ctx).Debugf("Found song: %+v", song)
 	resp = &types.SongVersesResponse{
-		Group: song.GroupName,
-		Song:  song.SongName,
-		Link:  song.Link.String,
-		Text:  song.Text,
+		Id:          song.Id,
+		Group:       song.GroupName,
+		Song:        song.SongName,
+		Link:        song.Link.String,
+		Text:        song.Text,
+		ReleaseDate: song.ReleaseDate.GoString(),
 	}
 	logx.WithContext(l.ctx).Debugf("Song verses response: %+v", resp)
 
