@@ -28,10 +28,21 @@ func NewUpdateSongLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Update
 }
 
 func (l *UpdateSongLogic) UpdateSong(req *types.SongUpdate, id int64) (resp *types.SongActionResponse, err error) {
-	parsedDate, err := time.Parse("01-02-2006", req.ReleaseDate)
-	if err != nil {
-		logx.WithContext(l.ctx).Errorf("Error parsing release date: %v", err)
-		return nil, fmt.Errorf("invalid release date format")
+	var releaseDate sql.NullTime
+	if req.ReleaseDate == "" {
+		// If empty, set releaseDate as NULL
+		releaseDate = sql.NullTime{Valid: false} // This marks the date as NULL in DB
+		logx.WithContext(l.ctx).Info("Release date is empty, setting as NULL in DB")
+	} else {
+		// Try parsing the release date if it's not empty
+		parsedDate, err := time.Parse("02.01.2006", req.ReleaseDate)
+		if err != nil {
+			logx.WithContext(l.ctx).Errorf("Error parsing release date: %v", err)
+			return nil, fmt.Errorf("invalid release date format")
+		}
+		// If parsing is successful, assign the parsed date
+		releaseDate = sql.NullTime{Time: parsedDate, Valid: true}
+		logx.WithContext(l.ctx).Infof("Parsed release date: %v", parsedDate)
 	}
 
 	song := &song.SongsUpdate{
@@ -39,7 +50,7 @@ func (l *UpdateSongLogic) UpdateSong(req *types.SongUpdate, id int64) (resp *typ
 
 		GroupName:   req.Group,
 		SongName:    req.Song,
-		ReleaseDate: parsedDate,
+		ReleaseDate: releaseDate,
 		Text:        req.Text,
 		Link: sql.NullString{
 			String: req.Link,

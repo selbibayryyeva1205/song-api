@@ -21,26 +21,20 @@ func UpdateSongHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
 			fmt.Println("err: ", err)
-			//return appresult.ErrMissingParam
 		}
 
 		err = json.Unmarshal(body, &req)
 		if err != nil {
 			fmt.Println("err: ", err)
-			//return appresult.ErrMissingParam
 		}
-		fmt.Println("REQUEEEST", r.URL.Fragment)
-		//queryParams := r.URL.Query()
-		//queryParams.
+
 		pathParts := strings.Split(r.URL.Path, "/")
 		if len(pathParts) < 4 || pathParts[2] == "" {
 			http.Error(w, "Song ID is required", http.StatusBadRequest)
 			return
 		}
 		songIDStr := pathParts[3]
-		//songIDStr := r.Form.Get("id")
 		songID, err := strconv.Atoi(songIDStr)
-	fmt.Println("======",songID)
 		if err != nil {
 			fmt.Println("Error converting song_id to int:", err)
 			httpx.ErrorCtx(r.Context(), w, fmt.Errorf("invalid song_id"))

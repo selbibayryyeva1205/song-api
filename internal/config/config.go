@@ -21,8 +21,8 @@ func LoadConfig() *Config {
 	}
 	port, _ := strconv.Atoi(os.Getenv("PORT"))
 	return &Config{
-	//	OpenAPI: os.Getenv("OPEN_API"),
-		Host: os.Getenv("HOST"),
+		//	OpenAPI: os.Getenv("OPEN_API"),
+		Host:    os.Getenv("HOST"),
 		Port:    port,
 		DB_DSN:  os.Getenv("DB_DSN"),
 		OpenAPI: os.Getenv("OPENAPI_URL"),

@@ -2,7 +2,6 @@ package logic
 
 import (
 	"context"
-	"fmt"
 
 	"api/internal/svc"
 	"api/internal/types"
@@ -36,13 +35,13 @@ func (l *ListSongsLogic) ListSongs(req *types.SongFilterRequest) (*types.SongLis
 
 	var songArray []types.Song
 	for _, v := range songs.Songs {
-		fmt.Println("GROUP", v.GroupName)
 		song := &types.Song{
-			Id: v.Id,
+			Id:   v.Id,
+			Link: v.Link.String,
 
 			Song:        v.SongName,
 			Group:       v.GroupName,
-			ReleaseDate: v.ReleaseDate.String(),
+			ReleaseDate:  v.ReleaseDate.Local().Format("02.01.2006"),
 			Text:        v.Link.String,
 		}
 		logx.WithContext(l.ctx).Debugf("Processing song: %+v", song)

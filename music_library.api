@@ -50,7 +50,6 @@ type (
     }
 
     SongUpdate {
-        Id          int64  `json:"id"`
         Group       string `json:"group"`
         Song        string `json:"song"`
         ReleaseDate string `json:"releaseDate"`
@@ -65,7 +64,7 @@ service musicLibrary-api {
         description: Returns a list of songs with optional filtering by group name and song title. Supports pagination.
     )
     @handler ListSongsHandler
-    get /songs/get(SongFilterRequest) returns (SongListResponse)
+    get /songs(SongFilterRequest) returns (SongListResponse)
 
     @doc(
         summary: Get song verses text

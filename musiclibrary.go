@@ -26,15 +26,13 @@ func main() {
 	verse := verses.NewVersesModel(sqlx.NewSqlConnFromDB(db))
 	song := song.NewSongsModel(sqlx.NewSqlConnFromDB(db))
 	// Initialize service context
-	ctx := svc.NewServiceContext(*cfg, *db, verse, song)
+	ctx := svc.NewServiceContext(*cfg, db, verse, song)
 
 	// Create the REST server
 	server := rest.MustNewServer(rest.RestConf{
 		Port: cfg.Port,
-		Host: "127.0.0.1",
+		Host: cfg.Host,
 	}, rest.WithCors("*"))
-
-	
 
 	// RegiHster API handlers
 	handler.RegisterHandlers(server, ctx)

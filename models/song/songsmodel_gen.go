@@ -50,7 +50,7 @@ type (
 		Id          int64          `db:"id"`
 		GroupName   string         `db:"group_name"`
 		SongName    string         `db:"song_name"`
-		ReleaseDate time.Time      `db:"release_date"`
+		ReleaseDate sql.NullTime     `db:"release_date"`
 		Link        sql.NullString `db:"link"`
 		Text        string         `db:"song_text"`
 	}
@@ -104,6 +104,7 @@ func (m *defaultSongsModel) Insert(ctx context.Context, data *Songs) (int64, err
 }
 
 func (m *defaultSongsModel) Update(ctx context.Context, data *SongsUpdate) error {
+	
 	query := fmt.Sprintf("update %s set group_name = $1,song_name=$2 ,release_date = $3, link = $4, song_text = $5 where id = $6", m.table)
 	logx.WithContext(ctx).Infof("Executing update query: %s with data: %+v", query, data)
 	_, err := m.conn.ExecCtx(ctx, query, data.GroupName, data.SongName, data.ReleaseDate, data.Link, data.Text, data.Id)

@@ -37,7 +37,7 @@ func (l *GetSongVersesLogic) GetSongVerses(req *types.SongVersesRequest) (resp *
 		Song:        song.SongName,
 		Link:        song.Link.String,
 		Text:        song.Text,
-		ReleaseDate: song.ReleaseDate.GoString(),
+		ReleaseDate: song.ReleaseDate.Format("02.01.2006"),
 	}
 	logx.WithContext(l.ctx).Debugf("Song verses response: %+v", resp)
 

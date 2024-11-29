@@ -39,7 +39,7 @@ func (l *AddSongLogic) AddSong(req *types.AddSongRequest) (resp *types.SongActio
 	var parsedDate time.Time
 	var link string
 
-	parsedDate, err = time.Parse("2006-01-02", "2024-01-01")
+	parsedDate, err = time.Parse("02-01-2006", "16-07-2006")
 	if err != nil {
 		return nil, fmt.Errorf("invalid release date")
 	}
@@ -51,10 +51,13 @@ func (l *AddSongLogic) AddSong(req *types.AddSongRequest) (resp *types.SongActio
 	} else {
 		link = apiData.Link
 		text = apiData.Text
-		parsedDate, _ = time.Parse("2006-01-02", apiData.ReleaseDate)
+		parsedDate, err = time.Parse("02.01.2006", apiData.ReleaseDate) // Updated format
 		if err != nil {
 			return nil, fmt.Errorf("invalid release date format from API")
 		}
+	}
+	if parsedDate.IsZero() {
+		return nil, fmt.Errorf("release date is not set")
 	}
 
 	song := &song.Songs{

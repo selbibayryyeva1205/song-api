@@ -16,9 +16,6 @@ import (
 func GetSongVersesHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		// queryParams := r.URL.Query()
-		// songIDStr := queryParams.Get("song_id")
-		// verseNumberStr := queryParams.Get("verse_number")
 		pathParts := strings.Split(r.URL.Path, "/")
 		if len(pathParts) < 5 || pathParts[2] == "" {
 			http.Error(w, "Song ID is required", http.StatusBadRequest)
@@ -37,9 +34,6 @@ func GetSongVersesHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 			httpx.ErrorCtx(r.Context(), w, fmt.Errorf("invalid verse_number"))
 			return
 		}
-
-		fmt.Println("Song ID:", songID)
-		fmt.Println("Verse Number:", verseNumber)
 		var req *types.SongVersesRequest
 		req = &types.SongVersesRequest{
 			Song_id:     int64(songID),
