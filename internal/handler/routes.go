@@ -40,22 +40,3 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 		},
 	)
 }
-func CorsMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Allow all origins
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		
-		// Allow specific methods
-		w.Header().Set("Access-Control-Allow-Methods", "*")
-		// Allow specific headers
-		w.Header().Set("Access-Control-Allow-Headers", "*")
-
-		// Handle preflight requests
-		if r.Method == http.MethodOptions {
-			w.WriteHeader(http.StatusOK)
-			return
-		}
-
-		next.ServeHTTP(w, r)
-	})
-}

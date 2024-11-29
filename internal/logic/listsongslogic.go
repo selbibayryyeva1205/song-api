@@ -24,14 +24,14 @@ func NewListSongsLogic(ctx context.Context, svcCtx *svc.ServiceContext) *ListSon
 }
 
 func (l *ListSongsLogic) ListSongs(req *types.SongFilterRequest) (*types.SongListResponse, error) {
-	logx.WithContext(l.ctx).Infof("Received ListSongs request: %+v", req)
+	l.WithContext(l.ctx).Infof("Received ListSongs request: %+v", req)
 
 	songs, err := l.svcCtx.SongModel.FindAll(l.ctx, &req.Group, &req.Song, int(req.Page), int(req.Limit))
 	if err != nil {
-		logx.WithContext(l.ctx).Errorf("Error fetching songs from database: %v", err)
+		l.WithContext(l.ctx).Errorf("Error fetching songs from database: %v", err)
 		return nil, err
 	}
-	logx.WithContext(l.ctx).Debugf("Fetched %d songs from database", len(songs.Songs))
+	l.WithContext(l.ctx).Debugf("Fetched %d songs from database", len(songs.Songs))
 
 	var songArray []types.Song
 	for _, v := range songs.Songs {
@@ -41,19 +41,18 @@ func (l *ListSongsLogic) ListSongs(req *types.SongFilterRequest) (*types.SongLis
 
 			Song:        v.SongName,
 			Group:       v.GroupName,
-			ReleaseDate:  v.ReleaseDate.Local().Format("02.01.2006"),
-			Text:        v.Link.String,
+			ReleaseDate: v.ReleaseDate.Time.Format("02.01.2006"),
+			Text:        v.Text,
 		}
-		logx.WithContext(l.ctx).Debugf("Processing song: %+v", song)
+		l.WithContext(l.ctx).Debugf("Processing song: %+v", song)
 		songArray = append(songArray, *song)
 	}
 
-	// Build the response
 	resp := &types.SongListResponse{
 		Songs: &songArray,
 		Total: int64(songs.Total),
 	}
-	logx.WithContext(l.ctx).Infof("ListSongs response prepared: Total Songs: %d", songs.Total)
+	l.WithContext(l.ctx).Infof("ListSongs response prepared: Total Songs: %d", songs.Total)
 
 	return resp, nil
 }

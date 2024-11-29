@@ -14,10 +14,6 @@ import (
 func ListSongsHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req types.SongFilterRequest
-		// if err := httpx.Parse(r, &req); err != nil {
-		// 	httpx.ErrorCtx(r.Context(), w, err)
-		// 	return
-		// }
 		req.Group = r.URL.Query().Get("group")
 		req.Song = r.URL.Query().Get("song")
 		limitStr := r.URL.Query().Get("limit")

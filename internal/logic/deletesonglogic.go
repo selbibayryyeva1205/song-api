@@ -18,21 +18,20 @@ type DeleteSongLogic struct {
 
 func NewDeleteSongLogic(ctx context.Context, svcCtx *svc.ServiceContext) *DeleteSongLogic {
 	return &DeleteSongLogic{
-		//Logger: logx.WithContext(ctx),
+		Logger: logx.WithContext(ctx),
 		ctx:    ctx,
 		svcCtx: svcCtx,
 	}
 }
 
 func (l *DeleteSongLogic) DeleteSong(song_id int64) (resp *types.SongActionResponse, err error) {
-	logx.WithContext(l.ctx).Infof("Received DeleteSong request")
+	l.WithContext(l.ctx).Infof("Received DeleteSong request")
 	err = l.svcCtx.SongModel.Delete(l.ctx, song_id)
 	if err != nil {
-		logx.WithContext(l.ctx).Errorf("Error deleting song from database: %v", err)
+		l.WithContext(l.ctx).Errorf("Error deleting song from database: %v", err)
 		return nil, err
 	}
-	resp = &types.SongActionResponse{
-		Message: fmt.Sprintf("Song deleted successfully with ID: %d", song_id),
-	}
-	return
+	return &types.SongActionResponse{
+		Message: fmt.Sprintf("Song with id %d  updated successfully", song_id),
+	}, nil
 }
